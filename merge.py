@@ -3,8 +3,11 @@ import random
 import sys
 import time
 from contextlib import contextmanager
-from multiprocessing import Manager, Pool
+import multiprocessing as mp
+from multiprocessing import Pool
 import argparse
+import math
+
 
 def sqe_merge(*args):
     left, right = args[0] if len(args) == 1 else args
@@ -35,100 +38,121 @@ def sqe_merge_sort(data):
     return sqe_merge(left, right)
 
 
-def merge_sort_multiple(results, array):
-    results.append(merge_sort(array))
+def seq_merge_sort_wrapper(cls_instance, A, q):
+    return cls_instance.s_merge_sort(A, q)
 
 
-def merge_multiple(results, array_part_left, array_part_right):
-    results.append(merge(array_part_left, array_part_right))
+def merge_wrapper(cls_instance, A, B, q):
+    return cls_instance.merge(A, B, q)
 
 
-def merge_sort(array):
-    array_length = len(array)
+class MergeSort(object):
+    def __init__(self, array, proc_num, core_num):
+        self.items = array
+        self.size = len(array)
+        self.p = proc_num
+        self.c = core_num
+        bitsize = int(math.log2(proc_num))
+        self.proc_names = []
+        for i in range(proc_num):
+            name = "{0:b}".format(i)
+            name = name.zfill(bitsize)
+            self.proc_names.append(name)
 
-    if array_length <= 1:
-        return array
-
-    middle_index = int(array_length / 2)
-    left = array[0:middle_index]
-    right = array[middle_index:]
-    left = merge_sort(left)
-    right = merge_sort(right)
-    return merge(left, right)
-
-
-def merge(left, right):
-    sorted_list = []
-    left = left[:]
-    right = right[:]
-    while len(left) > 0 or len(right) > 0:
-        if len(left) > 0 and len(right) > 0:
-            if left[0] <= right[0]:
-                sorted_list.append(left.pop(0))
-            else:
-                sorted_list.append(right.pop(0))
-        elif len(left) > 0:
-            sorted_list.append(left.pop(0))
-        elif len(right) > 0:
-            sorted_list.append(right.pop(0))
-    return sorted_list
-
-# @contextmanager
-# def process_pool(size):
-#     pool = Pool(size)
-#     yield pool
-#     pool.close()
-#     pool.join()
-
-
-def parallel_merge_sort(array, p):
-    step = int(length / p)
-    manager = Manager()
-    results = manager.list()
-
-    pool = Pool(p)
-    for n in range(p):
-        if n < p - 1:
-            chunk = array[n * step : (n + 1) * step]
-        else:
-            # Get the remaining elements in the list
-            chunk = array[n * step:]
-        pool.apply_async(merge_sort_multiple, (results, chunk))
-    pool.close()
-    pool.join()
-
-
-    proc = p//2
-    while proc >= 2:
-        pool = Pool(p)
-        for i in range(proc):
-            pool.apply_async(merge_multiple, (results, results.pop(0), results.pop(0)))
+    def sort(self):
+        arr_size = len(self.items)
+        step = arr_size // self.p
+        manager = mp.Manager()
+        q = manager.list()
+        pool = Pool(self.c)
+        if arr_size == 0:
+            return []
+        for i in range(len(self.proc_names)):
+            bottom = i * step
+            top = (i + 1) * step
+            pool.apply_async(seq_merge_sort_wrapper, args=(self, self.items[bottom:top], q))
         pool.close()
         pool.join()
-        proc = proc // 2
+        proc_num = self.p // 2
+        while proc_num > 0:
+            pool = Pool(self.c)
+            for proc in range(proc_num):
+                A = q[0]
+                del q[0]
+                B = q[0]
+                del q[0]
+                pool.apply_async(merge_wrapper, args=(self, A, B, q))
+            pool.close()
+            pool.join()
+            step *= 2
+            proc_num = proc_num // 2
 
-    # proc_num = p//2
-    # while proc_num > 0:
-    #     pool = Pool(p)
-    #     for proc in range(proc_num):
-    #         pool.apply_async(merge_multiple, (results, results.pop(0), results.pop(0)))
-    #         print('Waiting for all subprocesses done...')
-    #     pool.close()
-    #     pool.join()
-    #     print('All subprocesses done.')
-    #     step *= 2
-    #     proc_num = proc_num // 2
+        answer = q[0]
+        del q[0]
+        return answer
 
-    final_sorted_list = results[0]
-    return final_sorted_list
+    def merge(self, A, B, q):
+        size = len(A)
+        C = []  # List to be populated with values from A and B
+        j, k = 0, 0
+        for i in range(size * 2):
+            if A[j] < B[k]:
+                C.append(A[j])
+                j += 1
+                if j == size:
+                    C += B[k:]
+                    break
+            else:
+                C.append(B[k])
+                k += 1
+                if k == size:
+                    C += A[j:]
+                    break
+        q.append(C)
+
+    def s_merge_sort(self, A, q):
+        if len(A) <= 1:
+            if self.size == self.p:
+                q.append(A)
+            return A
+        else:
+            left = self.s_merge_sort(A[:len(A) // 2], q)
+            right = self.s_merge_sort(A[len(A) // 2:], q)
+            self.merge(left, right, q)
+            # a = self.size / self.p
+            # if len(A) == int(a):
+            #     q.append(A)
+            # return A
+
+    # def s_merge(self, array):
+    #     array_length = len(array)
+    #     if array_length == 1:
+    #         return array
+    #     else:
+    #         dist = len(A) // 2
+    #         for i in range(dist):
+    #             if A[i] > A[i + dist]:
+    #                 A[i], A[i + dist] = A[i + dist], A[i]
+    #         middle_index = int(array_length // 2)
+    #         left = self.s_merge(array[:middle_index])
+    #         right = self.s_merge(array[middle_index:])
+    #         return left + right
+
+
+
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Merge_Sort')
-    parser.add_argument('--proc_number', default='16', help='The number of processes')
+    parser.add_argument('--kernel_number', default='8', help='The number of workers')
+    parser.add_argument('--proc_number', default='8', help='The number of processes')
     args = parser.parse_args()
-    final_args = {"proc_number": args.proc_number}
-    process_count = int(final_args['proc_number'])
+    final_args = {"kernel_number": args.kernel_number,
+                  "proc_number": args.proc_number}
+    core_num = final_args["kernel_number"]
+    proc_num = final_args["proc_number"]
+    core_num = int(core_num)
+    proc_num = int(proc_num)
     size = [2 ** 20, 2 ** 21, 2 ** 22, 2 ** 23, 2 ** 24]
     for i in range(len(size)):
         # Randomize the length of our list
@@ -144,8 +168,8 @@ if __name__ == '__main__':
         print("sequential running time is", T1)
         # print('Starting parallel sort.')
         start2 = time.perf_counter()
-        data_sorted2 = parallel_merge_sort(randomized_array, process_count)
+        data_sorted2 = MergeSort(randomized_array, proc_num, core_num).sort()
         Tp = time.perf_counter() - start2
         print("parallel running time is", Tp)
-        print("Tp/T1 is ", Tp/T1)
+        print("Tp/T1 is ", Tp / T1)
         # print(data_sorted2)
