@@ -1,3 +1,4 @@
+import argparse
 import math
 import multiprocessing
 import random
@@ -137,12 +138,34 @@ class MergeSort():
         return merged < left
 
 
-if __name__ == "__main__":
-    exp = int(sys.argv[1])
-    size = 2**exp
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Merge_Sort')
+    parser.add_argument('--kernel_number', default='8', help='The number of workers')
+    parser.add_argument('--proc_number', default='8', help='The number of processes')
+    args = parser.parse_args()
+    final_args = {"kernel_number": args.kernel_number,
+                  "proc_number": args.proc_number}
+    core_num = final_args["kernel_number"]
+    proc_num = final_args["proc_number"]
+    core_num = int(core_num)
+    proc_num = int(proc_num)
+    size = [2 ** 20, 2 ** 21, 2 ** 22, 2 ** 23, 2 ** 24]
+    for i in range(len(size)):
+        # Randomize the length of our list
+        length = size[i]
 
-    data_unsorted = [random.randint(0, size) for _ in range(size)]
-
-    data_sorted2 = MergeSort(data_unsorted)
-    # for i in range(0, len(data_sorted2)-1):
-    #     assert data_sorted2[i]<=data_sorted2[i+1]
+        # Create an unsorted list with random numbers
+        randomized_array = [random.randint(0, length) for i in range(length)]
+        print('List length: {}'.format(length))
+        # Create a copy first due to mutation
+        start1 = time.perf_counter()
+        data_sorted1 = sqe_merge_sort(randomized_array)
+        T1 = time.perf_counter() - start1
+        print("sequential running time is", T1)
+        # print('Starting parallel sort.')
+        start2 = time.perf_counter()
+        data_sorted2 = MergeSort(randomized_array, proc_num, core_num).sort()
+        Tp = time.perf_counter() - start2
+        print("parallel running time is", Tp)
+        print("Tp/T1 is ", Tp / T1)
+        # print(data_sorted2)
