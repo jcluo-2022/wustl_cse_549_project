@@ -47,6 +47,7 @@ class MergeSort():
             self.proc_names.append(name)
 
     def sort(self):
+        print(1)
         arr_size = len(self.items)
         slice_size = arr_size//self.p
         q = multiprocessing.Queue()
@@ -122,7 +123,7 @@ class MergeSort():
         left_length, right_length = len(left), len(right)
         left_index, right_index = 0, 0
         merged = []
-        while left_index < left_length and right_index < right_length:
+        while left_index_length and right_index < right_length:
             if left[left_index] <= right[right_index]:
                 merged.append(left[left_index])
                 left_index += 1
@@ -133,20 +134,15 @@ class MergeSort():
             merged.extend(right[right_index:])
         else:
             merged.extend(left[left_index:])
-        return merged
+        return merged < left
 
 
 if __name__ == "__main__":
-    size = [2**20, 2**21, 2**22, 2**23, 2**24]
+    exp = int(sys.argv[1])
+    size = 2**exp
 
-    for i in range(len(size)):
-        data_unsorted = [random.randint(0, size[i]) for _ in range(size[i])]
-        start = time.perf_counter()
-        data_sorted1 = merge_sort(data_unsorted)
-        end1 = time.perf_counter() - start
-        print("sequential running time is", end1)
-        start2 = time.perf_counter()
-        data_sorted2 = MergeSort(data_unsorted)
-        end2 = time.perf_counter() - start2
-        print("parallel running time is", end2)
-        print("Tp/T1 is",end2/end1)
+    data_unsorted = [random.randint(0, size) for _ in range(size)]
+
+    data_sorted2 = MergeSort(data_unsorted)
+    # for i in range(0, len(data_sorted2)-1):
+    #     assert data_sorted2[i]<=data_sorted2[i+1]

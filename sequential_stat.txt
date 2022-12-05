@@ -1,0 +1,56 @@
+ Performance counter stats for 'python3 ./sequential.py 20':
+
+        86,826,636      l1d.replacement
+        42,871,189      l2_lines_out.non_silent
+
+       2.838075439 seconds time elapsed
+
+       2.821997000 seconds user
+       0.015988000 seconds sys
+
+
+
+ Performance counter stats for 'python3 ./sequential.py 21':
+
+       188,009,742      l1d.replacement
+        96,377,310      l2_lines_out.non_silent
+
+       6.135868867 seconds time elapsed
+
+       6.107449000 seconds user
+       0.027997000 seconds sys
+
+
+
+ Performance counter stats for 'python3 ./sequential.py 22':
+
+       417,438,010      l1d.replacement
+       214,662,392      l2_lines_out.non_silent
+
+      13.115575346 seconds time elapsed
+
+      13.031081000 seconds user
+       0.083994000 seconds sys
+
+
+
+ Performance counter stats for 'python3 ./sequential.py 23':
+
+       866,486,319      l1d.replacement
+       483,037,169      l2_lines_out.non_silent
+
+      28.125155512 seconds time elapsed
+
+      27.928016000 seconds user
+       0.196000000 seconds sys
+
+
+
+ Performance counter stats for 'python3 ./sequential.py 24':
+
+     1,862,009,660      l1d.replacement
+     1,092,774,716      l2_lines_out.non_silent
+
+      59.533675121 seconds time elapsed
+
+      59.181589000 seconds user

@@ -1,0 +1,57 @@
+Performance counter stats for 'python3 ./parallel.py 20':
+
+         6,760,688      l1d.replacement
+         5,149,731      l2_lines_out.non_silent
+
+       0.484547018 seconds time elapsed
+
+       0.480415000 seconds user
+       0.004003000 seconds sys
+
+
+
+ Performance counter stats for 'python3 ./parallel.py 21':
+
+        11,862,644      l1d.replacement
+         9,300,274      l2_lines_out.non_silent
+
+       0.948998947 seconds time elapsed
+
+       0.928937000 seconds user
+       0.020020000 seconds sys
+
+
+
+ Performance counter stats for 'python3 ./parallel.py 22':
+
+        22,430,142      l1d.replacement
+        17,572,813      l2_lines_out.non_silent
+
+       1.921579188 seconds time elapsed
+
+       1.873583000 seconds user
+       0.047938000 seconds sys
+
+
+
+ Performance counter stats for 'python3 ./parallel.py 23':
+
+        41,616,643      l1d.replacement
+        34,161,126      l2_lines_out.non_silent
+
+       3.766667161 seconds time elapsed
+
+       3.670514000 seconds user
+       0.095961000 seconds sys
+
+
+
+ Performance counter stats for 'python3 ./parallel.py 24':
+
+        81,519,248      l1d.replacement
+        67,280,109      l2_lines_out.non_silent
+
+       7.424047032 seconds time elapsed
+
+       7.291390000 seconds user
+       0.131988000 seconds sys
