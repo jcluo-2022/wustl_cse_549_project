@@ -2,21 +2,27 @@ import argparse
 import random
 import math
 import multiprocessing as mp
-from multiprocessing import pool
+from multiprocessing import Pool
 import time
-import matplotlib.pyplot as plt
 
 
+def seq_bitonic_sort_wrapper(cls_instance, A, order, q):
+    return cls_instance.seq_bitonic_sort(A, order, q)
 
 
+def merge_wrapper(cls_instance, A, B, q):
+    return cls_instance.merge(A, B, q)
 
-class BitonicSort():
+
+class BitonicSort(object):
     def __init__(self, array, up, proc_num, core_num):
+        # self.func = func
         self.items = array
         self.size = len(array)
         self.order = up
         self.p = proc_num
         self.c = core_num
+        # self._pool = Pool(core_num)
         bitsize = int(math.log2(proc_num))
         self.proc_names = []
         for i in range(proc_num):
@@ -25,72 +31,47 @@ class BitonicSort():
             self.proc_names.append(name)
 
     def sort(self):
-        """
-        Bitonic sort. Parallel sort algorithm that runs in O(log^2(n))
-
-        Args:
-            array (int[]): the list to be sorted
-            up     (bool): if True list is sorted in ascending order, if False list is
-                           sorted in descending order
-
-        Returns:
-            A sorted sequence of numbers.
-        """
         arr_size = len(self.items)
         slice_size = arr_size // self.p
-        q = mp.Queue()
-        proc_arr = []
+        manager = mp.Manager()
+        # queue = manager.Queue()
+        # lock = manager.Lock()
+        q = manager.list()
+        pool = Pool()
 
         if arr_size == 0:
             return []
         # Spawn all necessary processors running merge sequentially on
         # different slices
-        j = 0
-        l = 0
         for i in range(len(self.proc_names)):
             bottom = i * slice_size
             top = (i + 1) * slice_size
-            p = mp.Process(target=self.seq_bitonic_sort,
-                           args=(self.items[bottom:top], self.order, q),
-                           name=self.proc_names[i])
-            proc_arr.append(p)
-            p.start()
-            j += 1
-            if (j == self.c or i == len(self.proc_names) - 1):
-                for t in range(l, i + 1):
-                    proc_arr[t].join()
-                l = i + 1
-                j = 0
-
-        # Wait for processes to terminate before merging
-        # for i in range(len(self.proc_names)):
-        #     proc_arr[i].join()
-
+            pool.apply_async(seq_bitonic_sort_wrapper, args=(self, self.items[bottom:top], self.order, q,))
+        print('Waiting for all subprocesses done...')
+        pool.close()
+        pool.join()
+        print('All subprocesses done.')
+        # print("232323",q)
         # Merges the results from each individual process
         proc_num = self.p // 2
-        proc_arr.clear()
-        j = 0
-        l = 0
         while proc_num > 0:
+            pool = Pool()
             for proc in range(proc_num):
-                A = q.get()
-                B = q.get()
-                p = mp.Process(target=self.merge, args=(A, B, q))
-                proc_arr.append(p)
-                p.start()
-                j += 1
-                if (j == self.c or proc == proc_num - 1):
-                    for t in range(l, proc + 1):
-                        proc_arr[t].join()
-                    l = proc + 1
-                    j = 0
+                A = q[0]
+
+                del q[0]
+                B = q[0]
+                del q[0]
+                pool.apply_async(merge_wrapper, args=(self, A, B, q,))
+            print('Waiting for all subprocesses done...')
+            pool.close()
+            pool.join()
+            print('All subprocesses done.')
             slice_size *= 2
             proc_num = proc_num // 2
-            # for i in range(len(proc_arr)):
-            #     proc_arr[i].join()
-            proc_arr.clear()
 
-        answer = q.get()
+        answer = q[0]
+        del q[0]
         return answer
 
     def merge(self, A, B, q):
@@ -110,20 +91,20 @@ class BitonicSort():
                 if k == size:
                     C += A[j:]
                     break
-
-        q.put(C)
+        q.append(C)
 
     def seq_bitonic_sort(self, A, up, q):
         if len(A) <= 1:
             if self.size == self.p:
-                q.put(A)
+                q.append(A)
             return A
         else:
             left = self.seq_bitonic_sort(A[:len(A) // 2], True, q)
             right = self.seq_bitonic_sort(A[len(A) // 2:], False, q)
             A = self.seq_merge(left + right, up)
             if len(A) == self.size / self.p:
-                q.put(A)
+                print(len(A))
+                q.append(A)
             return A
 
     def seq_merge(self, A, up):
@@ -159,9 +140,6 @@ def is_ordered(A):
             return False
     return True
 
-
-
-
 def compAndSwap(a, i, j, dire):
     if (dire == 1 and a[i] > a[j]) or (dire == 0 and a[i] < a[j]):
         a[i], a[j] = a[j], a[i]
@@ -186,62 +164,29 @@ def sort(a, N, up):
     bitonicSort(a, 0, N, up)
 
 
-if __name__ == '__main__':
+
+def main():
+    print("start")
     parser = argparse.ArgumentParser(description='Bitonic_Sort')
     parser.add_argument('--kernel_number', default='8', help='The number of workers')
     parser.add_argument('--proc_number', default='8', help='The number of processes')
-    parser.add_argument('--input_size', default='3', help='The length of input list')
+    parser.add_argument('--input_size', default='20', help='The length of input list')
     args = parser.parse_args()
     final_args = {"kernel_number": args.kernel_number,
                   "proc_number": args.proc_number,
                   "input_size": args.input_size}
-    # resultslop=[]
-    # resultSeqTime=[]
-    # resultParallelTime=[]
-    # inputSize=[]
+
     s = final_args["input_size"]
     core_num = final_args["kernel_number"]
     proc_num = final_args["proc_number"]
-    s = int(s)
-    core_num = int(core_num)
-    proc_num = int(proc_num)
+    s = int(float(s))
+    core_num = int(float(core_num))
+    proc_num = int(float(proc_num))
     n = 2 ** s
     # inputSize.append(str(n))
     A = [random.randint(0, 100) for i in range(n)]
-    start = time.perf_counter()
-    sort(A, n, 1)
-    end = time.perf_counter()
-    t1=end-start
-    print("sequential run time is ",t1,"s")
-    start=time.perf_counter()
     Q = BitonicSort(A, True, proc_num, core_num)
-    end = time.perf_counter()
     print(Q.sort())
-    # print(result)
-    t2=end-start
-    print("parallel run time is ",t2,"s")
-    slop=t2/t1
-    print("Tp/T1 is ",slop)
 
-    # if(is_ordered(result)):
-    #     resultSeqTime.append(t1)
-    #     resultParallelTime.append(t2)
-    #     resultslop.append(slop)
-    # plt.plot(inputSize, resultSeqTime)
-    # plt.xlabel("InputSize")
-    # plt.ylabel("Time")
-    # plt.title("Execution Time (Model: Sequential)")
-    # plt.savefig('./Sequential time.png')
-    # plt.clf()
-    # plt.plot(inputSize, resultslop)
-    # plt.xlabel("InputSize")
-    # plt.ylabel("Tp/T1")
-    # plt.title("Time Ratio (Tp/T1)")
-    # plt.savefig('./Time Ratio.png')
-    # plt.clf()
-    # plt.plot(inputSize, resultParallelTime)
-    # plt.xlabel("InputSize")
-    # plt.ylabel("Time")
-    # plt.title("Execution Time (Model: Parallel)")
-    # plt.savefig('./Parallel time.png')
-    # plt.clf()
+if __name__ == "__main__":
+    main()
