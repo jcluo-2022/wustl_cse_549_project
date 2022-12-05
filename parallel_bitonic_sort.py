@@ -37,7 +37,7 @@ class BitonicSort(object):
         # queue = manager.Queue()
         # lock = manager.Lock()
         q = manager.list()
-        pool = Pool()
+        pool = Pool(self.c)
 
         if arr_size == 0:
             return []
@@ -55,7 +55,7 @@ class BitonicSort(object):
         # Merges the results from each individual process
         proc_num = self.p // 2
         while proc_num > 0:
-            pool = Pool()
+            pool = Pool(self.c)
             for proc in range(proc_num):
                 A = q[0]
 
