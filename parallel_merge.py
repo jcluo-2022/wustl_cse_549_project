@@ -115,29 +115,32 @@ class MergeSort(object):
             if self.size == self.p:
                 q.append(A)
             return A
-        else:
-            left = self.s_merge_sort(A[:len(A) // 2], q)
-            right = self.s_merge_sort(A[len(A) // 2:], q)
-            self.merge(left, right, q)
-            # a = self.size / self.p
-            # if len(A) == int(a):
-            #     q.append(A)
-            # return A
+        left = self.s_merge_sort(A[:len(A) // 2], q)
+        right = self.s_merge_sort(A[len(A) // 2:], q)
+        A = self.s_merge(left, right)
+        a = self.size / self.p
+        if len(A) == int(a):
+            q.append(A)
+        return A
 
-    # def s_merge(self, array):
-    #     array_length = len(array)
-    #     if array_length == 1:
-    #         return array
-    #     else:
-    #         dist = len(A) // 2
-    #         for i in range(dist):
-    #             if A[i] > A[i + dist]:
-    #                 A[i], A[i + dist] = A[i + dist], A[i]
-    #         middle_index = int(array_length // 2)
-    #         left = self.s_merge(array[:middle_index])
-    #         right = self.s_merge(array[middle_index:])
-    #         return left + right
-
+    def s_merge(self, A, B):
+        size = len(A)
+        C = []
+        j, k = 0, 0
+        for i in range(size * 2):
+            if A[j] < B[k]:
+                C.append(A[j])
+                j += 1
+                if j == size:
+                    C += B[k:]
+                    break
+            else:
+                C.append(B[k])
+                k += 1
+                if k == size:
+                    C += A[j:]
+                    break
+        return C
 
 
 
