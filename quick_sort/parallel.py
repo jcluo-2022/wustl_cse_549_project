@@ -1,21 +1,11 @@
-from multiprocessing import Manager, Process
-
 from wustl_cse_549_project.quick_sort import sequential
+from wustl_cse_549_project.quick_sort.No_Deamon_Pool import NestablePool
 
 
 def quick_sort(a):
-    with Manager() as manager:
-        result = manager.list()
-        quick_sort_helper(a, result)
-        result = list(result)
-    return result
 
-
-def quick_sort_helper(a, result):
-    with Manager() as manager:
-        if len(a) <= 2 ** 20:
-            result = manager.list(sequential.quick_sort(a))
-            return
+    if len(a) <= 2 ** 18:
+        return sequential.quick_sort(a)
 
     pivot = a[0]
     lower = []
@@ -27,19 +17,10 @@ def quick_sort_helper(a, result):
         else:
             greater.append(num)
 
-    with Manager() as manager:
-        result1 = manager.list()
-        result2 = manager.list()
+    pool = NestablePool()
+    res1 = pool.apply_async(quick_sort, (lower, ))
+    res2 = pool.apply_async(quick_sort, (greater, ))
+    pool.close()
+    pool.join()
 
-        p1 = Process(target=quick_sort_helper, args=(lower, result1, ))
-        p2 = Process(target=quick_sort_helper, args=(greater, result2, ))
-
-        p1.start()
-        p2.start()
-        p1.join()
-        p2.join()
-        result1.append(pivot)
-        result1.extend(result2)
-        result = result1
-
-    return
+    return res1.get() + [pivot] + res2.get()
