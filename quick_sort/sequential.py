@@ -1,15 +1,32 @@
-def quick_sort(a):
-    if len(a) <= 1:
-        return a
+def quick_sort(a, l, h):
+    if h - l <= 0:
+        return
 
-    pivot = a[0]
-    lower = []
-    greater = []
+    p = partition(a, l, h)
 
-    for num in a[1:]:
-        if num < pivot:
-            lower.append(num)
-        else:
-            greater.append(num)
+    quick_sort(a, l, p)
+    quick_sort(a, p + 1, h)
 
-    return quick_sort(lower) + [pivot] + quick_sort(greater)
+
+def partition(a, l, h):
+    pivot = a[(l+h)//2]
+    i = l-1
+    j = h+1
+    while 1:
+
+        while 1:
+            i += 1
+            if a[i] >= pivot:
+                break
+
+        while 1:
+            j -= 1
+            if a[j] <= pivot:
+                break
+
+        if i >= j:
+            return j
+
+        tmp = a[j]
+        a[j] = a[i]
+        a[i] = tmp
