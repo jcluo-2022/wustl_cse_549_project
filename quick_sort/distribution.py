@@ -1,30 +1,34 @@
 import random
-def distribute(a):
+import sys
+from multiprocessing.sharedctypes import RawArray
 
-    if (len(a)<=1):
-        return a
-    pivot = a[0]
-    lower = []
-    greater = []
 
-    for num in a[1:]:
-        if num < pivot:
-            lower.append(num)
-        else:
-            greater.append(num)
+def partition(a, l, h):
+    pivot = a[(l+h)//2]
+    i = l-1
+    j = h+1
+    while 1:
 
-    return lower + [pivot] + greater
+        while 1:
+            i += 1
+            if a[i] >= pivot:
+                break
+
+        while 1:
+            j -= 1
+            if a[j] <= pivot:
+                break
+
+        if i >= j:
+            return j
+
+        tmp = a[j]
+        a[j] = a[i]
+        a[i] = tmp
+
 
 if __name__ == '__main__':
-    a = [random.randint(1,2**20) for i in range(2**20)]
-    pivot = a[0]
-    lower = []
-    greater = []
-
-    for num in a[1:]:
-        if num < pivot:
-            lower.append(num)
-        else:
-            greater.append(num)
-    # b = lower + [pivot] + greater
-    b = distribute(lower) + [pivot] + distribute(greater)
+    exp = int(sys.argv[1])
+    input_size = 2**exp
+    a = RawArray("i",[random.randint(1,input_size) for i in range(input_size)])
+    partition(a,0,len(a)-1)

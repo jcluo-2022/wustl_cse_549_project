@@ -15,5 +15,3 @@ def quick_sort(a, i, j):
     p2 = Process(target=quick_sort, args=(a, p+1, j,))
     p1.start()
     p2.start()
-    p1.join()
-    p2.join()
